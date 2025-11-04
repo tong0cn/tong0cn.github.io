@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JS Console</title>
+    <link rel="icon" href="/img/favicon1.ico" type="image/x-icon">
+    
+    <!-- 引入 Monaco Editor 资源 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/editor/editor.main.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            padding: 20px 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.8;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 20px;
+            gap: 20px;
+        }
+        
+        .panel {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .panel-header {
+            background: #3498db;
+            color: white;
+            padding: 12px 15px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        /* Monaco Editor 容器样式 */
+        .editor-container {
+            /* height: 400px; */
+            height: 54vh;
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        .console-output {
+            /* height: 399px; */
+            height: 54vh;
+            padding: 15px;
+            background: #1e1e1e;
+            color: #f0f0f0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            line-height: 1.4;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            background: #f5f7fa;
+            border-top: 1px solid #eaeaea;
+        }
+        
+        .color-controls {
+            height: 68px;
+            display: flex;
+            gap: 10px;
+            padding: 10px 15px;
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            border-top: 1px solid #34495e;
+            align-items: center;
+        }
+        
+        .color-label {
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .run-btn {
+            background: #2ecc71;
+            color: white;
+        }
+        
+        .run-btn:hover {
+            background: #27ae60;
+        }
+        
+        .clear-btn {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .clear-btn:hover {
+            background: #c0392b;
+        }
+        
+        .example-btn {
+            background: #3498db;
+            color: white;
+        }
+        
+        .example-btn:hover {
+            background: #2980b9;
+        }
+        
+        /* 颜色控制按钮样式 */
+        .color-btn {
+            /* padding: 6px 20px; */
+            padding: 6px clamp(10px, calc(10px + (100vw - 769px) * (10 / 1151)), 20px);
+            border: 2px solid transparent;
+            border-radius: 4px;
+            /* font-size: 12px; */
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .color-btn.active {
+            border-color: #fff;
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+            transform: scale(1.05);
+        }
+        
+        .color-white {
+            background: #ffffff;
+            color: #333;
+        }
+        
+        .color-green {
+            background: #2ecc71;
+            color: white;
+        }
+        
+        .color-blue {
+            background: #3498db;
+            color: white;
+        }
+        
+        .color-yellow {
+            background: #f1c40f;
+            color: #333;
+        }
+        
+        .color-cyan {
+            background: #1abc9c;
+            color: white;
+        }
+        
+        .color-magenta {
+            background: #9b59b6;
+            color: white;
+        }
+        
+        .examples {
+            padding: 15px;
+            background: #f8f9fa;
+            border-top: 1px solid #eaeaea;
+        }
+        
+        .example-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .example-item {
+            padding: 8px 15px;
+            background: #e9ecef;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        
+        .example-item:hover {
+            background: #dee2e6;
+            transform: translateY(-2px);
+        }
+        
+        footer {
+            text-align: center;
+            padding: 15px;
+            background: #f5f7fa;
+            color: #6c757d;
+            font-size: 14px;
+            border-top: 1px solid #eaeaea;
+        }
+        
+        /* 加载指示器 */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        /* 返回按钮容器 */
+        .back-btn-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 104px;
+            display: flex;
+            align-items: center;
+            /* padding-left: 20px; */
+            z-index: 1000;
+        }
+
+        /* 返回按钮样式 - 与header同高的正方形 */
+        .back-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 104px; /* 正方形边长，可根据header高度调整 */
+            height: 104.2px; /* 与width相同保持正方形 */
+            background: #2c3e50;
+            /* border: 2px solid rgba(255,255,255,0.3); */
+            /* border-radius: 12px; */
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 按钮悬停效果 */
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.2));
+            border-color: rgba(255,255,255,0.5);
+        }
+
+        /* 按钮激活效果 */
+        .back-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 按钮伪类 - 流光效果 */
+        .back-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .back-btn:hover::before {
+            left: 100%;
+        }
+
+        /* 返回图标样式 */
+        .back-icon {
+            width: 40px;
+            height: 40px;
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+
+        /* 图标伪元素 - 箭头主体 */
+        .back-icon::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: white;
+            transform: translateY(-50%);
+        }
+
+        /* 图标伪元素 - 箭头头部 */
+        .back-icon::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 12px;
+            height: 12px;
+            border-left: 2px solid white;
+            border-bottom: 2px solid white;
+            transform: translateY(-50%) rotate(45deg);
+        }
+
+        /* 悬停时图标动画 */
+        .back-btn:hover .back-icon {
+            transform: translateX(-3px);
+        }
+
+        /* 确保header有相对定位以便绝对定位的按钮容器 */
+        header {
+            position: relative;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .color-controls {
+                flex-wrap: wrap;
+            }
+        }
+
+        /* 颜色控制按钮样式响应式变化 */
+        /* @media (min-width: 769px) and (max-width: 1235px) {
+            .color-btn { */
+                /* 左右内边距从20px缩小到10px，上下保持6px不变 */
+                /* padding: 6px 10px; 
+            }
+        } */
+
+        /* 原有小屏幕样式保持不变 */
+        /* @media (max-width: 768px) {
+            .color-btn {
+                padding: 6px 20px;
+            }
+        } */
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <!-- 返回按钮容器 -->
+            <div class="back-btn-container">
+                <button class="back-btn" onclick="window.location.replace('/')" title="返回上一页">
+                    <img alt="返回" src="/img/back_JSConsole.png" class="back-icon"></img>
+                </button>
+            </div>
+
+            <h1>JavaScript 调试环境</h1>
+            <p class="subtitle">编写、测试和调试您的 JavaScript 代码</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="panel">
+                <div class="panel-header">
+                    <span>代码编辑器</span>
+                    <span>Ctrl+Enter 运行代码 | F1 代码提示</span>
+                </div>
+                <div id="editorContainer" class="editor-container"></div>
+                <div class="controls">
+                    <button id="runBtn" class="run-btn">运行代码</button>
+                    <button id="clearBtn" class="clear-btn">清除控制台</button>
+                    <button id="exampleBtn" class="example-btn">加载示例</button>
+                </div>
+                
+                <div class="examples">
+                    <p>快速示例:</p>
+                    <div class="example-list">
+                        <div class="example-item" data-example="sort">排序示例</div>
+                        <div class="example-item" data-example="dom">DOM操作</div>
+                        <div class="example-item" data-example="ajax">AJAX请求</div>
+                        <div class="example-item" data-example="class">类与对象</div>
+                        <div class="example-item" data-example="async">异步编程</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-header">
+                    <span>控制台输出</span>
+                    <span>实时显示结果</span>
+                </div>
+                <pre id="consoleOutput" class="console-output"></pre>
+                
+                <!-- 新增颜色控制区域 -->
+                <div class="color-controls">
+                    <span class="color-label">输出颜色:</span>
+                    <button class="color-btn color-white active" data-color="#ffffff">白色</button>
+                    <button class="color-btn color-green" data-color="#2ecc71">绿色</button>
+                    <button class="color-btn color-blue" data-color="#3498db">蓝色</button>
+                    <button class="color-btn color-yellow" data-color="#f1c40f">黄色</button>
+                    <button class="color-btn color-cyan" data-color="#1abc9c">青色</button>
+                    <button class="color-btn color-magenta" data-color="#9b59b6">紫色</button>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>JavaScript 调试环境 &copy; 2023 | 基于 Monaco Editor 构建</p>
+        </footer>
+    </div>
+
+    <!-- 引入 Monaco Editor -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
+    
+    <script>
+        // 获取DOM元素
+        const consoleOutput = document.getElementById('consoleOutput');
+        const runBtn = document.getElementById('runBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const exampleBtn = document.getElementById('exampleBtn');
+        const exampleItems = document.querySelectorAll('.example-item');
+        const colorButtons = document.querySelectorAll('.color-btn');
+        
+        let editor; // Monaco 编辑器实例
+        let currentColor = '#ffffff'; // 默认白色
+        
+        // 重写console.log以在页面显示输出
+        const originalConsoleLog = console.log;
+        const originalConsoleError = console.error;
+        const originalConsoleWarn = console.warn;
+        const originalConsoleInfo = console.info;
+        
+        function addOutput(type, ...args) {
+            const timestamp = new Date().toLocaleTimeString();
+            const output = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+            
+            // 根据当前选择的颜色设置输出颜色
+            let outputColor;
+            switch(type) {
+                case 'log':
+                    outputColor = currentColor; // 使用用户选择的颜色
+                    break;
+                case 'error':
+                    outputColor = '#ff4444'; // 错误保持红色
+                    break;
+                case 'warn':
+                    outputColor = '#ffaa00'; // 警告保持橙色
+                    break;
+                case 'info':
+                    outputColor = '#4488ff'; // 信息保持蓝色
+                    break;
+                default:
+                    outputColor = currentColor;
+            }
+            
+            consoleOutput.innerHTML += `<span style="color: ${outputColor}">[${timestamp}] ${type.toUpperCase()}: ${output}</span>\n`;
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+        
+        console.log = (...args) => {
+            originalConsoleLog.apply(console, args);
+            addOutput('log', ...args);
+        };
+        
+        console.error = (...args) => {
+            originalConsoleError.apply(console, args);
+            addOutput('error', ...args);
+        };
+        
+        console.warn = (...args) => {
+            originalConsoleWarn.apply(console, args);
+            addOutput('warn', ...args);
+        };
+        
+        console.info = (...args) => {
+            originalConsoleInfo.apply(console, args);
+            addOutput('info', ...args);
+        };
+        
+        // 颜色控制功能
+        function setOutputColor(color) {
+            currentColor = color;
+            
+            // 更新按钮激活状态
+            colorButtons.forEach(btn => {
+                if (btn.getAttribute('data-color') === color) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            
+            console.log(`输出颜色已切换为: ${color}`);
+        }
+        
+        // 初始化 Monaco Editor
+        function initEditor() {
+            require.config({ 
+                paths: { 
+                    'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' 
+                } 
+            });
+            
+            require(['vs/editor/editor.main'], function() {
+                // 创建编辑器
+                editor = monaco.editor.create(document.getElementById('editorContainer'), {
+                    value: 
+`// 欢迎使用 JavaScript 调试环境
+// 点击"运行代码"或按 Ctrl+Enter 执行代码
+// 输入代码时会有智能提示和语法高亮
+
+// 示例：输出问候语
+console.log("Hello, JavaScript!");
+
+// 示例：计算斐波那契数列
+function fibonacci(n) {
+    if (n <= 1) return n;
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+console.log("斐波那契数列前10项:");
+for (let i = 0; i < 10; i++) {
+    console.log(\`fib(\${i}) = \${fibonacci(i)}\`);
+}
+
+// 示例：数组操作
+const fruits = ["苹果", "香蕉", "橙子", "葡萄"];
+console.log("水果列表:", fruits);
+console.log("排序后:", [...fruits].sort());`,
+                    language: 'javascript',
+                    theme: 'vs-dark',
+                    fontSize: 14,
+                    lineNumbers: 'on',
+                    roundedSelection: true,
+                    scrollBeyondLastLine: false,
+                    readOnly: false,
+                    cursorStyle: 'line',
+                    automaticLayout: true,
+                    minimap: { enabled: true },
+                    suggestOnTriggerCharacters: true,
+                    quickSuggestions: true,
+                    parameterHints: { enabled: true }
+                });
+                
+                // 添加键盘快捷键
+                editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, function() {
+                    runCode();
+                });
+                
+                console.log("🚀 高级代码编辑器已加载完成！");
+                console.log("💡 特性：语法高亮、代码补全、错误检查、多光标编辑");
+                console.log("🎨 现在可以点击颜色按钮切换输出颜色！");
+            });
+        }
+        
+        // 运行代码函数
+        function runCode() {
+            try {
+                consoleOutput.innerHTML = '';
+                const code = editor.getValue();
+                eval(code);
+            } catch (error) {
+                console.error('执行错误:', error.message);
+            }
+        }
+        
+        // 清除控制台
+        function clearConsole() {
+            consoleOutput.innerHTML = '';
+        }
+        
+        // 加载示例代码
+        function loadExample(exampleName) {
+            const examples = {
+                sort:  
+`// 数组排序示例
+const numbers = [3, 1, 4, 1, 5, 9, 2, 6, 5];
+console.log("原始数组:", numbers);
+
+// 升序排序
+const ascending = [...numbers].sort((a, b) => a - b);
+console.log("升序排序:", ascending);
+
+// 降序排序
+const descending = [...numbers].sort((a, b) => b - a);
+console.log("降序排序:", descending);
+
+// 字符串数组排序
+const fruits = ["香蕉", "苹果", "橙子", "葡萄"];
+console.log("水果排序:", fruits.sort());
+
+// 对象数组排序
+const users = [
+    { name: "张三", age: 25 },
+    { name: "李四", age: 30 },
+    { name: "王五", age: 20 }
+];
+const sortedByAge = [...users].sort((a, b) => a.age - b.age);
+console.log("按年龄排序:", sortedByAge);`,
+                
+                dom:   
+`// DOM操作示例
+console.log("当前页面标题:", document.title);
+
+// 创建元素
+const newElement = document.createElement('div');
+newElement.textContent = "这是通过JavaScript创建的元素";
+newElement.style.cssText = 'padding: 10px; background: #e3f2fd; margin: 10px 0; border-radius: 5px;';
+document.body.appendChild(newElement);
+
+// 修改样式
+document.querySelector('.container').style.border = '2px solid #3498db';
+
+console.log("DOM操作完成！");`,
+                
+                ajax:  
+`// 模拟AJAX请求
+console.log("开始模拟AJAX请求...");
+
+// 使用Promise模拟异步请求
+function fakeApiCall(url) {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            if (url === '/api/users') {
+                resolve({
+                    status: 200,
+                    data: [
+                        { id: 1, name: '张三', email: 'zhangsan@example.com' },
+                        { id: 2, name: '李四', email: 'lisi@example.com' }
+                    ]
+                });
+            } else {
+                reject({ status: 404, message: '接口不存在' });
+            }
+        }, 1000);
+    });
+}
+
+// 调用模拟API
+fakeApiCall('/api/users')
+    .then(response => {
+        console.log('请求成功:', response);
+    })
+    .catch(error => {
+        console.log('请求失败:', error);
+    });`,
+                
+                class: 
+`// 类与对象示例
+class Person {
+    constructor(name, age) {
+        this.name = name;
+        this.age = age;
+    }
+    
+    introduce() {
+        return \`大家好，我是\${this.name}，今年\${this.age}岁\`;
+    }
+    
+    static compareAge(person1, person2) {
+        return person1.age - person2.age;
+    }
+}
+
+// 创建实例
+const person1 = new Person('张三', 25);
+const person2 = new Person('李四', 30);
+
+console.log(person1.introduce());
+console.log(person2.introduce());
+console.log(\"年龄差:\", Person.compareAge(person1, person2));
+
+// 继承
+class Student extends Person {
+    constructor(name, age, major) {
+        super(name, age);
+        this.major = major;
+    }
+    
+    introduce() {
+        return \`\${super.introduce()}，专业是\${this.major}\`;
+    }
+}
+
+const student = new Student('王五', 20, '计算机科学');
+console.log(student.introduce());`,
+                
+                async: 
+`// 异步编程示例
+console.log("开始异步操作演示...");
+
+// async/await 示例
+async function fetchUserData(userId) {
+    console.log(\`开始获取用户 \${userId} 的数据...\`);
+    
+    // 模拟API调用
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            resolve({
+                id: userId,
+                name: \`用户\${userId}\`,
+                email: \`user\${userId}@example.com\`
+            });
+        }, 1000);
+    });
+}
+
+// 并行请求
+async function getMultipleUsers() {
+    try {
+        console.log("开始并行获取多个用户...");
+        
+        const [user1, user2, user3] = await Promise.all([
+            fetchUserData(1),
+            fetchUserData(2),
+            fetchUserData(3)
+        ]);
+        
+        console.log("所有用户数据:", { user1, user2, user3 });
+        console.log("异步操作完成！");
+        
+    } catch (error) {
+        console.error("获取用户数据失败:", error);
+    }
+}
+
+// 执行异步函数
+getMultipleUsers();`,
+            };
+            
+            if (examples[exampleName] && editor) {
+                editor.setValue(examples[exampleName]);
+            }
+        }
+        
+        // 事件监听
+        runBtn.addEventListener('click', runCode);
+        clearBtn.addEventListener('click', clearConsole);
+        exampleBtn.addEventListener('click', () => loadExample('sort'));
+        
+        // 示例项点击事件
+        exampleItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const exampleName = item.getAttribute('data-example');
+                loadExample(exampleName);
+            });
+        });
+        
+        // 颜色按钮点击事件
+        colorButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const color = btn.getAttribute('data-color');
+                setOutputColor(color);
+            });
+        });
+        
+        // 初始化编辑器
+        console.log("⏳ 正在加载高级代码编辑器...");
+        initEditor();
+        
+        // 页面加载完成
+        window.addEventListener('load', () => {
+            console.log("✅ JavaScript调试环境已就绪！");
+            console.log("🎯 特性：语法高亮、智能提示、错误检查、快捷键支持");
+            console.log("🎨 现在可以点击颜色按钮切换输出颜色！");
+            console.log("💡 提示：错误和警告信息会保持固定颜色，只有普通日志会改变颜色");
+        });
+    </script>
+</body>
+</html>
