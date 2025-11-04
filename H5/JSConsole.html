@@ -55,6 +55,7 @@
             flex-wrap: wrap;
             padding: 20px;
             gap: 20px;
+            overflow: scroll;
         }
         
         .panel {
@@ -112,6 +113,7 @@
             background: linear-gradient(to right, #2c3e50, #4a6491);
             border-top: 1px solid #34495e;
             align-items: center;
+            overflow: scroll;
         }
         
         .color-label {
@@ -367,6 +369,20 @@
             
             .color-controls {
                 flex-wrap: wrap;
+            }
+        }
+
+        @media (max-width: 450px) {
+            .run-btn, .clear-btn, .example-btn{
+                padding: 10px 14px;
+            }
+            .back-icon {
+                width: 20px;
+                height: 20px;
+            }
+            .back-btn {
+                width: 30px;
+                height: 100px;
             }
         }
 
