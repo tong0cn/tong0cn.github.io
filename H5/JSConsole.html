@@ -374,7 +374,7 @@
         }
 
         @media (max-width: 450px) {
-            .run-btn, .clear-btn, .example-btn{
+            .clear-btn, .example-btn{
                 padding: 10px 12px;
             }
             .back-icon {
@@ -434,9 +434,9 @@
                 </div>
                 <div id="editorContainer" class="editor-container"></div>
                 <div class="controls">
-                    <button id="runBtn" class="run-btn">运行代码</button>
-                    <button id="clearBtn" class="clear-btn">清除控制台</button>
-                    <button id="exampleBtn" class="example-btn">加载示例</button>
+                    <button id="runBtn" class="run-btn">运行</button>
+                    <button id="clearBtn" class="example-btn">清除控制台</button>
+                    <button id="exampleBtn" class="clear-btn">清空编辑器</button>
                 </div>
                 
                 <div class="examples">
@@ -472,7 +472,8 @@
         </div>
         
         <footer>
-            <p>JavaScript 调试环境 &copy; 2023 | 基于 Monaco Editor 构建</p>
+            <!-- [产品] by [作者] © [年份] | [技术栈] -->
+            <p>JavaScript 调试环境 &copy; 2025 By tong | 基于 Monaco Editor 构建</p>
         </footer>
     </div>
 
@@ -576,10 +577,6 @@
                     value: 
 `// 欢迎使用 JavaScript 调试环境
 // 点击"运行代码"或按 Ctrl+Enter 执行代码
-// 输入代码时会有智能提示和语法高亮
-
-// 示例：输出问候语
-console.log("Hello, JavaScript!");
 
 // 示例：计算斐波那契数列
 function fibonacci(n) {
@@ -590,12 +587,7 @@ function fibonacci(n) {
 console.log("斐波那契数列前10项:");
 for (let i = 0; i < 10; i++) {
     console.log(\`fib(\${i}) = \${fibonacci(i)}\`);
-}
-
-// 示例：数组操作
-const fruits = ["苹果", "香蕉", "橙子", "葡萄"];
-console.log("水果列表:", fruits);
-console.log("排序后:", [...fruits].sort());`,
+}`,
                     language: 'javascript',
                     theme: 'vs-dark',
                     fontSize: 14,
@@ -615,10 +607,11 @@ console.log("排序后:", [...fruits].sort());`,
                 editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, function() {
                     runCode();
                 });
-                
-                console.log("🚀 高级代码编辑器已加载完成！");
-                console.log("💡 特性：语法高亮、代码补全、错误检查、多光标编辑");
-                console.log("🎨 现在可以点击颜色按钮切换输出颜色！");
+
+                // 🆕 新增：添加快捷键插入日志功能
+                initEmojiLog();
+
+                console.log("🚀 代码编辑器已加载完成！");
             });
         }
         
@@ -638,6 +631,14 @@ console.log("排序后:", [...fruits].sort());`,
             consoleOutput.innerHTML = '';
         }
         
+        // 清空编辑器
+        function clearEditor() {
+            if (editor) {
+                editor.setValue('// 编辑器已清空\n// 开始编写你的 JavaScript 代码吧！\n\n');
+                console.log("✅ 编辑器已清空");
+            }
+        }
+
         // 加载示例代码
         function loadExample(exampleName) {
             const examples = {
@@ -805,7 +806,7 @@ getMultipleUsers();`,
         // 事件监听
         runBtn.addEventListener('click', runCode);
         clearBtn.addEventListener('click', clearConsole);
-        exampleBtn.addEventListener('click', () => loadExample('sort'));
+        exampleBtn.addEventListener('click', clearEditor);
         
         // 示例项点击事件
         exampleItems.forEach(item => {
@@ -824,7 +825,7 @@ getMultipleUsers();`,
         });
         
         // 初始化编辑器
-        console.log("⏳ 正在加载高级代码编辑器...");
+        console.log("⏳ 正在加载代码编辑器...");
         initEditor();
         
         // 页面加载完成
@@ -832,8 +833,126 @@ getMultipleUsers();`,
             console.log("✅ JavaScript调试环境已就绪！");
             console.log("🎯 特性：语法高亮、智能提示、错误检查、快捷键支持");
             console.log("🎨 现在可以点击颜色按钮切换输出颜色！");
+            console.log("⚡ 新增功能：Ctrl+Shift+Alt+E 插入emoji日志");
             console.log("💡 提示：错误和警告信息会保持固定颜色，只有普通日志会改变颜色");
         });
+
+        // 🆕 新增：emoji日志功能函数
+        function initEmojiLog() {
+            // Emoji 循环列表
+            const emojiList = ['💬', '⭐', '🌟', '💫', '✨', '⚡', '💥', '🔥', '💧', '🌈', '📌', '📍', '🔍', '🔎', '💡', '🔔', '📢', '📣', '🔊', '🔕' ,  '🎯', '🐛', '📝', '📝', '📋', '📌', '📍', '🔖', '📎', '📏', '📐', '✂️', '📂'];
+            let currentEmojiIndex = 0;
+            
+            // 注册快捷键
+            editor.addCommand(
+                monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyMod.Alt | monaco.KeyCode.KeyE, 
+                function() {
+                    insertEmojiLog(emojiList, currentEmojiIndex);
+                    // 更新索引
+                    currentEmojiIndex = (currentEmojiIndex + 1) % emojiList.length;
+                }
+            );
+        }
+
+        // 🆕 新增：插入emoji日志的核心函数
+        function insertEmojiLog(emojiList, currentIndex) {
+            const selection = editor.getSelection();
+            const model = editor.getModel();
+            
+            // 获取当前选中的文本，如果没有选中则使用默认的 'data'
+            let variableName = 'data';
+            if (!selection.isEmpty()) {
+                variableName = model.getValueInRange(selection);
+            }
+            
+            // 获取当前emoji
+            const currentEmoji = emojiList[currentIndex];
+            
+            // 构建日志语句
+            const logStatement = `console.log("${currentEmoji} ${variableName}:", ${variableName});\n`;
+            
+            // 在当前选中行的下一行插入
+            const insertLineNumber = selection.endLineNumber + 1;
+            const insertColumn = 1;
+            
+            editor.executeEdits("insert-emoji-log", [{
+                range: new monaco.Range(insertLineNumber, insertColumn, insertLineNumber, insertColumn),
+                text: logStatement
+            }]);
+            
+            // 将光标移动到新插入的语句后面
+            const newPosition = new monaco.Position(insertLineNumber, logStatement.length);
+            editor.setPosition(newPosition);
+            editor.focus();
+        }
+        // function addLogShortcuts() {
+        //     // Ctrl+Shift+L 插入普通日志
+        //     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyE, function() {
+        //         insertLogStatement('log');
+        //     });
+            
+        //     // Ctrl+Shift+E 插入错误日志
+        //     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyZ, function() {
+        //         insertLogStatement('error');
+        //     });
+            
+        //     // Ctrl+Shift+W 插入警告日志
+        //     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyF, function() {
+        //         insertLogStatement('warn');
+        //     });
+            
+        //     // Ctrl+Shift+S 插入成功日志
+        //     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyV, function() {
+        //         insertLogStatement('success');
+        //     });
+        // }
+
+        // // 插入日志语句的核心函数
+        // function insertLogStatement(type = 'log') {
+        //     const selection = editor.getSelection();
+        //     const model = editor.getModel();
+            
+        //     // 表情符号映射
+        //     const emojiMap = {
+        //         log: '💬',
+        //         error: '🔴',
+        //         warn: '🟡', 
+        //         success: '🟢',
+        //         info: '🔵'
+        //     };
+            
+        //     // 获取当前选中的文本（变量名）
+        //     let variableName = '';
+        //     if (!selection.isEmpty()) {
+        //         variableName = model.getValueInRange(selection);
+        //     } else {
+        //         // 如果没有选中文本，自动生成变量名
+        //         variableName = 'data';
+        //     }
+            
+        //     const emoji = emojiMap[type] || '💬';
+        //     let logStatement;
+            
+        //     if (type === 'success') {
+        //         logStatement = `console.log("${emoji} ${variableName}:", ${variableName});`;
+        //     } else {
+        //         logStatement = `console.${type}("${emoji} ${variableName}:", ${variableName});`;
+        //     }
+            
+        //     // 在当前行下方插入日志语句
+        //     const insertLineNumber = selection.endLineNumber + 1;
+        //     const insertColumn = 1;
+            
+        //     editor.executeEdits("insert-log", [{
+        //         range: new monaco.Range(insertLineNumber, insertColumn, insertLineNumber, insertColumn),
+        //         text: logStatement + '\n'
+        //     }]);
+            
+        //     // 将光标移动到新插入的语句后面
+        //     const newPosition = new monaco.Position(insertLineNumber + 1, 1);
+        //     editor.setPosition(newPosition);
+        //     editor.focus();
+        // }
     </script>
 </body>
 </html>
