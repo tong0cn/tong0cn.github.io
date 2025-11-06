@@ -55,7 +55,7 @@
             flex-wrap: wrap;
             padding: 20px;
             gap: 20px;
-            overflow: scroll;
+            /* overflow: scroll;  */
         }
         
         .panel {
@@ -96,6 +96,85 @@
             white-space: pre-wrap;
             line-height: 1.4;
         }
+
+        /* 运行块样式：每次运行作为一个独立折叠面板 */
+        .run-block {
+            /* border: 1px solid rgba(255,255,255,0.06); */
+            /* background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); */
+            margin: 8px 0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .run-block-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.03);
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+            font-size: 13px;
+            color: #eee;
+        }
+
+        .collapse-btn, .delete-btn {
+            padding: 3px 12px;
+            font-size: 12px;
+            margin-left: 4px;
+            font-weight: normal;
+        }
+
+        .run-start {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap; /* 关键：允许换行 */
+        }
+
+        .run-timeTxt {
+            margin-right: auto;
+        }
+
+        .run-controls {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap; /* 允许按钮换行 */
+            justify-content: flex-end; /* 右对齐 */
+        }
+
+        .run-block-controls button {
+            margin-left: 6px;
+            padding: 6px 10px;
+            font-size: 12px;
+        }
+
+        .run-block-body {
+            padding: 6px 2px;
+            font-family: monospace;
+            font-size: 13px;
+            color: #fff;
+            white-space: pre-wrap;
+            max-height: 40vh;
+            overflow: auto;
+            background: rgba(0,0,0,0.3);
+        }
+
+        /* 折叠动画：collapsed 时将 body 高度折叠为 0，并隐藏结束行 */
+        .run-block-body.collapsed {
+            max-height: 0 !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            overflow: hidden !important;
+            transition: max-height 220ms ease-out, padding 200ms ease-out;
+        }
+
+        .run-end.collapsed {
+            max-height: 0;
+            opacity: 0;
+            transition: opacity 200ms ease-out, max-height 200ms ease-out;
+            height: 0;
+            overflow: hidden;
+        }
         
         .controls {
             display: flex;
@@ -113,7 +192,7 @@
             background: linear-gradient(to right, #2c3e50, #4a6491);
             border-top: 1px solid #34495e;
             align-items: center;
-            overflow: scroll;
+            overflow: auto;
         }
         
         .color-label {
@@ -141,21 +220,21 @@
         }
         
         .clear-btn {
-            background: #e74c3c;
-            color: white;
-        }
-        
-        .clear-btn:hover {
-            background: #c0392b;
-        }
-        
-        .example-btn {
             background: #3498db;
             color: white;
         }
         
-        .example-btn:hover {
+        .clear-btn:hover {
             background: #2980b9;
+        }
+        
+        .example-btn {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .example-btn:hover {
+            background: #c0392b;
         }
         
         /* 颜色控制按钮样式 */
@@ -365,11 +444,43 @@
         
         @media (max-width: 768px) {
             .main-content {
-                flex-direction: column;
+                flex-direction: column;  
+                padding: 15px;
+                gap: 15px;
+            }
+
+            .panel {
+                min-width: unset; /* 移除最小宽度限制 */
+                width: 100%;
             }
             
+            .editor-container, .console-output {
+                height: 45vh; /* 小屏幕时适当降低高度 */
+            }
+            
+            /* 确保颜色控制区域在小屏幕正常显示 */
             .color-controls {
+                height: auto;
+                padding: 15px;
                 flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+
+        /* 超小屏幕进一步优化 */
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 10px;
+                gap: 10px;
+            }
+            
+            .editor-container, .console-output {
+                height: 40vh;
+            }
+            
+            .panel-header {
+                padding: 10px 12px;
+                font-size: 14px;
             }
         }
 
@@ -391,7 +502,7 @@
                 width: 100%;
             }
             .color-controls {
-                height: 130px;
+                height: 136px;
             }
         }
 
@@ -435,8 +546,8 @@
                 <div id="editorContainer" class="editor-container"></div>
                 <div class="controls">
                     <button id="runBtn" class="run-btn">运行</button>
-                    <button id="clearBtn" class="example-btn">清除控制台</button>
-                    <button id="exampleBtn" class="clear-btn">清空编辑器</button>
+                    <button id="clearHistoryBtn" class="clear-btn">清除控制台</button>
+                    <button id="exampleBtn" class="example-btn">清空编辑器</button>
                 </div>
                 
                 <div class="examples">
@@ -456,7 +567,7 @@
                     <span>控制台输出</span>
                     <span>实时显示结果</span>
                 </div>
-                <pre id="consoleOutput" class="console-output"></pre>
+                <div id="consoleOutput" class="console-output" aria-live="polite"></div>
                 
                 <!-- 新增颜色控制区域 -->
                 <div class="color-controls">
@@ -484,7 +595,6 @@
         // 获取DOM元素
         const consoleOutput = document.getElementById('consoleOutput');
         const runBtn = document.getElementById('runBtn');
-        const clearBtn = document.getElementById('clearBtn');
         const exampleBtn = document.getElementById('exampleBtn');
         const exampleItems = document.querySelectorAll('.example-item');
         const colorButtons = document.querySelectorAll('.color-btn');
@@ -498,54 +608,123 @@
         const originalConsoleWarn = console.warn;
         const originalConsoleInfo = console.info;
         
-        function addOutput(type, ...args) {
-            const timestamp = new Date().toLocaleTimeString();
-            const output = args.map(arg => 
-                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
-            ).join(' ');
-            
-            // 根据当前选择的颜色设置输出颜色
-            let outputColor;
-            switch(type) {
-                case 'log':
-                    outputColor = currentColor; // 使用用户选择的颜色
-                    break;
-                case 'error':
-                    outputColor = '#ff4444'; // 错误保持红色
-                    break;
-                case 'warn':
-                    outputColor = '#ffaa00'; // 警告保持橙色
-                    break;
-                case 'info':
-                    outputColor = '#4488ff'; // 信息保持蓝色 
-                    break;
-                default:
-                    outputColor = currentColor;
+        // 管理运行块（每次运行为一个独立的折叠面板），使用“--- 运行开始 --- / --- 运行结束 ---”文本边界
+        let currentRunId = null;
+
+        /* CSS 动画相关：使用 collapsed 类控制 body 与 end 的显示 */
+        // 创建 run block，结构：
+        // <div class="run-block" id>
+        //   <div class="run-start">--- 运行开始: ts --- <span class="run-controls">[折叠][删除]</span></div>
+        //   <div class="run-block-body">...</div>
+        //   <div class="run-end">--- 运行结束: ts ---</div>
+        // </div>
+        function createRunBlock() {
+            // 创建唯一标识和容器
+            const id = 'run-' + Date.now();
+            const runBlock = document.createElement('div');
+            runBlock.className = 'run-block';
+            runBlock.id = id;
+
+            // 创建开始行
+            const ts = new Date().toLocaleString();
+
+            const startLine = document.createElement('div');
+            startLine.className = 'run-start';
+
+            const timeTxt = document.createElement('div');
+            timeTxt.className = 'run-timeTxt';
+            timeTxt.innerHTML = ` --- ${ts} ---`;
+            startLine.appendChild(timeTxt);
+
+            // 创建控制按钮
+            const controls = document.createElement('span');
+            controls.className = 'run-controls';
+            controls.style.marginLeft = '10px';
+
+            const collapseBtn = document.createElement('button');
+            collapseBtn.className = 'collapse-btn';
+            collapseBtn.textContent = '折叠';
+            collapseBtn.onclick = () => toggleCollapse(id, collapseBtn);
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.textContent = '删除';
+            deleteBtn.onclick = () => runBlock.remove();
+
+            controls.appendChild(collapseBtn);
+            controls.appendChild(deleteBtn);
+            startLine.appendChild(controls);
+
+            // 创建内容区域
+            const body = document.createElement('div');
+            body.className = 'run-block-body';
+            body.textContent = '';
+
+            const endLine = document.createElement('div');
+            endLine.className = 'run-block-line run-end';
+            // endLine.textContent = `--- 运行结束: ${ts} ---`;
+
+            // 组装并插入DOM
+            runBlock.appendChild(startLine);
+            runBlock.appendChild(body);
+            runBlock.appendChild(endLine);
+
+            consoleOutput.appendChild(runBlock);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+
+            currentRunId = id;
+            return id;
+        }
+
+        function getRunBodyById(id) {
+            const blk = document.getElementById(id);
+            return blk ? blk.querySelector('.run-block-body') : null;
+        }
+
+        function appendToCurrentRun(text, color) {
+            if (!currentRunId || !document.getElementById(currentRunId)) {
+                createRunBlock();
             }
-            
-            consoleOutput.innerHTML += `<span style="color: ${outputColor}">[${timestamp}] ${type.toUpperCase()}: ${output}</span>\n`;
+            const body = getRunBodyById(currentRunId);
+            if (!body) return;
+            const line = document.createElement('div');
+            if (color) line.style.color = color;
+            line.textContent = text;
+            body.appendChild(line);
+            body.scrollTop = body.scrollHeight;
             consoleOutput.scrollTop = consoleOutput.scrollHeight;
         }
-        
-        console.log = (...args) => {
-            originalConsoleLog.apply(console, args);
-            addOutput('log', ...args);
-        };
-        
-        console.error = (...args) => {
-            originalConsoleError.apply(console, args);
-            addOutput('error', ...args);
-        };
-        
-        console.warn = (...args) => {
-            originalConsoleWarn.apply(console, args);
-            addOutput('warn', ...args);
-        };
-        
-        console.info = (...args) => {
-            originalConsoleInfo.apply(console, args);
-            addOutput('info', ...args);
-        };
+
+        function addOutput(type, ...args) {
+            const timestamp = new Date().toLocaleTimeString();
+            const output = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)).join(' ');
+            let outputColor;
+            switch(type) {
+                case 'log': outputColor = currentColor; break;
+                case 'error': outputColor = '#ff4444'; break;
+                case 'warn': outputColor = '#ffaa00'; break;
+                case 'info': outputColor = '#4488ff'; break;
+                default: outputColor = currentColor;
+            }
+            appendToCurrentRun(`[${timestamp}] ${type.toUpperCase()}: ${output}`, outputColor);
+        }
+
+        console.log = (...args) => { originalConsoleLog.apply(console, args); addOutput('log', ...args); };
+        console.error = (...args) => { originalConsoleError.apply(console, args); addOutput('error', ...args); };
+        console.warn = (...args) => { originalConsoleWarn.apply(console, args); addOutput('warn', ...args); };
+        console.info = (...args) => { originalConsoleInfo.apply(console, args); addOutput('info', ...args); };
+
+        // 折叠/展开，带动画，并切换按钮文本
+        function toggleCollapse(runId, btn) {
+            const blk = document.getElementById(runId);
+            if (!blk) return;
+            const body = blk.querySelector('.run-block-body');
+            const end = blk.querySelector('.run-end');
+            const isCollapsed = body.classList.toggle('collapsed');
+            if (end) end.classList.toggle('collapsed');
+            // 切换按钮文本
+            if (btn) btn.textContent = isCollapsed ? '展开' : '折叠';
+        }
         
         // 颜色控制功能
         function setOutputColor(color) {
@@ -612,13 +791,16 @@ for (let i = 0; i < 10; i++) {
                 initEmojiLog();
 
                 console.log("🚀 代码编辑器已加载完成！");
+            }, function(error) {
+                console.error('Monaco Editor 加载失败:', error);
             });
         }
         
-        // 运行代码函数
+        // 运行代码：每次运行创建新的运行块并将日志路由到该块
         function runCode() {
             try {
-                consoleOutput.innerHTML = '';
+                // 创建新的运行块并设置为当前
+                createRunBlock();
                 const code = editor.getValue();
                 eval(code);
             } catch (error) {
@@ -627,8 +809,9 @@ for (let i = 0; i < 10; i++) {
         }
         
         // 清除控制台
-        function clearConsole() {
+        function clearHistory() {
             consoleOutput.innerHTML = '';
+            currentRunId = null;
         }
         
         // 清空编辑器
@@ -803,10 +986,12 @@ getMultipleUsers();`,
             }
         }
         
-        // 事件监听
-        runBtn.addEventListener('click', runCode);
-        clearBtn.addEventListener('click', clearConsole);
-        exampleBtn.addEventListener('click', clearEditor);
+    // 事件监听
+    runBtn.addEventListener('click', runCode);
+
+    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+    if (clearHistoryBtn) clearHistoryBtn.addEventListener('click', clearHistory);
+    exampleBtn.addEventListener('click', clearEditor);
         
         // 示例项点击事件
         exampleItems.forEach(item => {
